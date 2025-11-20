@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 import { useGetMoviesQuery, useGetActorQuery } from '../../services/TMDB';
 
-import { MovieList } from '..';
+import { MovieList, Pagination } from '..';
 
 import useStyles from './styles';
 
@@ -169,7 +169,13 @@ function MovieInformation() {
             Starred Movies
           </Typography>
           {movies
-            ? <MovieList movies={movies} numberOfMovies={12} />
+            ? (
+              <>
+                <MovieList movies={movies} numberOfMovies={12} />
+                {console.log(page, movies)}
+                <Pagination currentPage={page} setPage={setPage} totalPages={movies.total_pages} />
+              </>
+            )
             : <Box>Sorry, nothing was found.</Box>}
         </Box>
       )}

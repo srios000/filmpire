@@ -1,4 +1,5 @@
 import { makeStyles } from '@mui/styles';
+import { display } from '@mui/system';
 
 export default makeStyles((theme) => ({
   containerSpaceAround: {
@@ -14,6 +15,13 @@ export default makeStyles((theme) => ({
     borderRadius: '20px',
     boxShadow: '0.5em 1em 1em rgb(64, 64, 70)',
     width: '80%',
+    [theme.breakpoints.down('lg')]: {
+      margin: '0 auto',
+      width: '40%',
+      height: 'auto',
+      display: 'flex',
+      alignItems: 'center',
+    },
     [theme.breakpoints.down('md')]: {
       margin: '0 auto',
       width: '50%',
@@ -39,7 +47,7 @@ export default makeStyles((theme) => ({
   links: {
     display: 'flex',
     justifyContent: 'center',
-    alignItem: 'center',
+    alignItems: 'center',
     textDecoration: 'none',
     [theme.breakpoints.down('sm')]: {
       padding: '0.5rem 1rem',
