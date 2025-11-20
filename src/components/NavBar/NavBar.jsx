@@ -1,18 +1,44 @@
-import React, { useState } from 'react';
-import { AppBar, IconButton, Toolbar, Drawer, Button, Avatar, useMediaQuery } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { AppBar, IconButton, Toolbar, Drawer, Button, Avatar, useMediaQuery, useTheme } from '@mui/material';
 import { Menu, AccountCircle, Brightness4, Brightness7 } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import { ClassNames } from '@emotion/react';
-import { useTheme } from '@mui/material';
+import { setUser, userSelector } from '../../features/auth';
 import useStyles from './styles';
-import { Sidebar } from '..';
+import { Search, Sidebar } from '..';
+import { fetchToken, createSessionId, moviesApi } from '../../utils';
 
-const NavBar = () => {
+function NavBar() {
+  const { isAuthenticated, user } = useSelector(userSelector);
   const [mobileOpen, setmobileOpen] = useState(false);
   const classes = useStyles();
   const isMobile = useMediaQuery('(max-width:600px)');
+
   const theme = useTheme();
-  const isAuthenticated = true;
+  const dispatch = useDispatch();
+
+  console.log(user);
+
+  const token = localStorage.getItem('request_token');
+  const sessionIdFromLocalStorage = localStorage.getItem('session_id');
+
+  useEffect(() => {
+    const logInUser = async () => {
+      if (token) {
+        if (sessionIdFromLocalStorage) {
+          const { data: userData } = await moviesApi.get(`/account?session_id=${sessionIdFromLocalStorage}`);
+          dispatch(setUser(userData));
+        } else {
+          const sessionId = await createSessionId();
+          const { data: userData } = await moviesApi.get(`/account?session_id=${sessionId}`);
+          dispatch(setUser(userData));
+        }
+      }
+    };
+
+    logInUser();
+  }, [token]);
 
   return (
     <>
@@ -32,21 +58,21 @@ const NavBar = () => {
           <IconButton
             color="inherit"
             sx={{ ml: 1 }}
-            onClick={()=>{}}
+            onClick={() => {}}
           >
-            {theme.palette.mode === 'dark' ? <Brightness7/> : <Brightness4/>}
+            {theme.palette.mode === 'dark' ? <Brightness7 /> : <Brightness4 />}
           </IconButton>
-          {!isMobile && "Search..." }
+          {!isMobile && <Search /> }
           <div>
             {!isAuthenticated ? (
-              <Button color="inherit" onClick={() => {}}>
-                Login&nsbp;<AccountCircle />
+              <Button color="inherit" onClick={fetchToken}>
+                Login&nbsp;<AccountCircle />
               </Button>
             ) : (
               <Button
                 color="inherit"
                 component={Link}
-                to={`/profile/:id`}
+                to={`/profile/${user.id}`}
                 className={classes.linkButton}
                 onClick={() => {}}
               >
@@ -54,12 +80,12 @@ const NavBar = () => {
                 <Avatar
                   style={{ width: 30, height: 30 }}
                   alt="Profile"
-                  src={`https://static.wikitide.net/utaitewiki/upv2avatars/default.png`}
+                  src="https://static.wikitide.net/utaitewiki/upv2avatars/default.png"
                 />
               </Button>
             )}
           </div>
-          {isMobile && "Search..." }
+          {isMobile && <Search /> }
         </Toolbar>
       </AppBar>
       <div>
@@ -76,7 +102,7 @@ const NavBar = () => {
               <Sidebar setmobileOpen={setmobileOpen} />
             </Drawer>
           ) : (
-            <Drawer classes={{ paper: classes.drawerPaper }} variant='permanent' open>
+            <Drawer classes={{ paper: classes.drawerPaper }} variant="permanent" open>
               <Sidebar setmobileOpen={setmobileOpen} />
             </Drawer>
           )}
@@ -84,6 +110,6 @@ const NavBar = () => {
       </div>
     </>
   );
-};
+}
 
 export default NavBar;
