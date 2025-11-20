@@ -1,5 +1,4 @@
 import { makeStyles } from '@mui/styles';
-import { width, borderRadius, display, height, maxWidth } from '@mui/system';
 
 export default makeStyles((theme) => ({
   containerSpaceAround: {
@@ -74,5 +73,31 @@ export default makeStyles((theme) => ({
       width: '90%',
       height: '90%',
     },
+  },
+  videoThumbnailContainer: {
+    position: 'relative',
+    cursor: 'pointer',
+    '&:hover .play-overlay': {
+      opacity: 1,
+    },
+  },
+  videoThumbnail: {
+    width: '100%',
+    borderRadius: '8px',
+    display: 'block',
+  },
+  playOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    borderRadius: '8px',
+    opacity: 0,
+    transition: 'opacity 0.3s ease',
   },
 }));
