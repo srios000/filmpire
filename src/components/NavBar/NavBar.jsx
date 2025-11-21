@@ -1,24 +1,43 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { AppBar, IconButton, Toolbar, Drawer, Button, Avatar, useMediaQuery, useTheme } from '@mui/material';
 import { Menu, AccountCircle, Brightness4, Brightness7 } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { ClassNames } from '@emotion/react';
+
+import { ColorModeContext } from '../../utils/ToggleColorMode';
 import { setUser, userSelector } from '../../features/auth';
 import useStyles from './styles';
-import { Search, Sidebar } from '..';
+import Search from '../Search/Search';
+import Sidebar from '../Sidebar/Sidebar';
 import { fetchToken, createSessionId, moviesApi } from '../../utils';
 
 function NavBar() {
   const { isAuthenticated, user } = useSelector(userSelector);
-  const [mobileOpen, setmobileOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const classes = useStyles();
   const isMobile = useMediaQuery('(max-width:600px)');
 
   const theme = useTheme();
   const dispatch = useDispatch();
 
-  // console.log(user);
+  const colorMode = useContext(ColorModeContext);
+
+  const getAvatarSrc = () => {
+    if (!user?.avatar) return 'https://static.wikitide.net/utaitewiki/upv2avatars/default.png';
+
+    // Check for TMDB avatar
+    if (user.avatar.tmdb?.avatar_path) {
+      return `https://www.themoviedb.org/t/p/w64_and_h64_face${user.avatar.tmdb.avatar_path}`;
+    }
+
+    // Check for Gravatar
+    if (user.avatar.gravatar?.hash) {
+      return `https://www.gravatar.com/avatar/${user.avatar.gravatar.hash}`;
+    }
+
+    // Fallback
+    return 'https://static.wikitide.net/utaitewiki/upv2avatars/default.png';
+  };
 
   const token = localStorage.getItem('request_token');
   const sessionIdFromLocalStorage = localStorage.getItem('session_id');
@@ -49,7 +68,7 @@ function NavBar() {
               color="inherit"
               edge="start"
               style={{ outline: 'none' }}
-              onClick={() => setmobileOpen((prevMobileOpen) => !prevMobileOpen)}
+              onClick={() => setMobileOpen((prevMobileOpen) => !prevMobileOpen)}
               className={classes.menuButton}
             >
               <Menu />
@@ -58,7 +77,7 @@ function NavBar() {
           <IconButton
             color="inherit"
             sx={{ ml: 1 }}
-            onClick={() => {}}
+            onClick={colorMode.toggleColorMode}
           >
             {theme.palette.mode === 'dark' ? <Brightness7 /> : <Brightness4 />}
           </IconButton>
@@ -80,7 +99,7 @@ function NavBar() {
                 <Avatar
                   style={{ width: 30, height: 30 }}
                   alt="Profile"
-                  src="https://static.wikitide.net/utaitewiki/upv2avatars/default.png"
+                  src={getAvatarSrc()}
                 />
               </Button>
             )}
@@ -95,15 +114,15 @@ function NavBar() {
               variant="temporary"
               anchor="right"
               open={mobileOpen}
-              onClose={() => setmobileOpen((prevMobileOpen) => !prevMobileOpen)}
+              onClose={() => setMobileOpen((prevMobileOpen) => !prevMobileOpen)}
               classes={{ paper: classes.drawerPaper }}
               ModalProps={{ keepMounted: true }}
             >
-              <Sidebar setmobileOpen={setmobileOpen} />
+              <Sidebar setMobileOpen={setMobileOpen} />
             </Drawer>
           ) : (
             <Drawer classes={{ paper: classes.drawerPaper }} variant="permanent" open>
-              <Sidebar setmobileOpen={setmobileOpen} />
+              <Sidebar setMobileOpen={setMobileOpen} />
             </Drawer>
           )}
         </nav>

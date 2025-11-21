@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { createTheme, ThemeProvider } from '@mui/material';
 import { Provider as ReduxProvider } from 'react-redux';
 
+import ToggleColorModeProvider from './utils/ToggleColorMode';
 import App from './components/App';
 import store from './app/store';
 
@@ -18,11 +19,11 @@ const theme = createTheme({});
 
 ReactDOM.render(
   <ReduxProvider store={store}>
-    <ThemeProvider theme={theme}>
+    <ToggleColorModeProvider>
       <BrowserRouter>
         <App />
       </BrowserRouter>,
-    </ThemeProvider>,
+    </ToggleColorModeProvider>,
   </ReduxProvider>,
   document.getElementById('root'),
 );

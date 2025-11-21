@@ -1,21 +1,19 @@
 import React, { useState } from 'react';
-import { Box, Button, ButtonGroup, CircularProgress, Grid, Modal, Typography } from '@mui/material';
+import { Box, Button, ButtonGroup, CircularProgress, Grid, Typography } from '@mui/material';
 import { Movie as MovieIcon, Language, ArrowBack } from '@mui/icons-material';
 import { Link, useParams } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import axios from 'axios';
 import { useGetMoviesQuery, useGetActorQuery } from '../../services/TMDB';
 
-import { MovieList, Pagination } from '..';
+import MovieList from '../MovieList/MovieList';
+import Pagination from '../Pagination/Pagination';
 
 import useStyles from './styles';
 
-function MovieInformation() {
+function Actors() {
   const { id } = useParams();
   const { data, isFetching, error } = useGetActorQuery(id);
   const [page, setPage] = useState(1);
   const classes = useStyles();
-  const dispatch = useDispatch();
   const { data: movies, isFetching: isMoviesFetching } = useGetMoviesQuery({ actorId: id, page });
 
   // console.log(data);
@@ -172,7 +170,6 @@ function MovieInformation() {
             ? (
               <>
                 <MovieList movies={movies} numberOfMovies={12} />
-                {console.log(page, movies)}
                 <Pagination currentPage={page} setPage={setPage} totalPages={movies.total_pages} />
               </>
             )
@@ -183,4 +180,4 @@ function MovieInformation() {
   );
 }
 
-export default MovieInformation;
+export default Actors;
