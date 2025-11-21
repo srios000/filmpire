@@ -11,7 +11,7 @@ import RatedCards from '../RatedCards/RatedCards';
 
 function Profile() {
   // console.log('Profile');
-  const { user } = useSelector(userSelector);
+  const { isAuthenticated, user } = useSelector(userSelector);
   const { data: favoriteMovies, refetch: refetchFavorites } = useGetListQuery({ listName: 'favorite/movies', accountId: user.id, sessionId: localStorage.getItem('session_id'), page: 1 });
   const { data: watchlistMovies, refetch: refetchWatchlisted } = useGetListQuery({ listName: 'watchlist/movies', accountId: user.id, sessionId: localStorage.getItem('session_id'), page: 1 });
 
@@ -29,9 +29,11 @@ function Profile() {
     <Box>
       <Box display="flex" justifyContent="space-between">
         <Typography variant="h4" gutterBottom>My Profile</Typography>
+        {isAuthenticated && (
         <Button color="inherit" onClick={logout}>
           Logout &nbsp;<ExitToApp />
         </Button>
+        )}
       </Box>
       {!favoriteMovies?.results?.length && !watchlistMovies?.results?.length
         ? <Typography variant="h5">Add favorites or watchlist some movies to see them here!</Typography>
