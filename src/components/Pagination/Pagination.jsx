@@ -1,16 +1,20 @@
 import React from 'react';
 import { Typography, Button, Box } from '@mui/material';
+import { useDispatch } from 'react-redux';
+import { setPage } from '../../features/currentGenreOrCategory';
 import useStyles from './styles';
 
-function Pagination({ currentPage, totalPages, setPage }) {
+function Pagination({ currentPage, totalPages }) {
   const classes = useStyles();
+  const dispatch = useDispatch();
 
   const maxPages = Math.min(totalPages, 500);
 
-  const handleFirst = () => setPage(1);
-  const handleLast = () => setPage(maxPages);
-  const handlePrev = () => setPage((prev) => Math.max(1, prev - 1));
-  const handleNext = () => setPage((prev) => Math.min(maxPages, prev + 1));
+  const handleFirst = () => dispatch(setPage(1));
+  const handleLast = () => dispatch(setPage(maxPages));
+  const handlePrev = () => dispatch(setPage(Math.max(1, currentPage - 1)));
+  const handleNext = () => dispatch(setPage(Math.min(maxPages, currentPage + 1)));
+  const handlePageClick = (page) => dispatch(setPage(page));
 
   if (maxPages === 0) return null;
 
@@ -93,7 +97,7 @@ function Pagination({ currentPage, totalPages, setPage }) {
         ) : (
           <Button
             key={page}
-            onClick={() => setPage(page)}
+            onClick={() => handlePageClick(page)}
             className={classes.button}
             variant={currentPage === page ? 'contained' : 'outlined'}
             color="primary"

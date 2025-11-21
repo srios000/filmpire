@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Box, CircularProgress, useMediaQuery, Typography } from '@mui/material';
 import { useSelector } from 'react-redux';
 
@@ -8,8 +8,7 @@ import MovieList from '../MovieList/MovieList';
 import Pagination from '../Pagination/Pagination';
 
 function Movies() {
-  const [page, setPage] = useState(1);
-  const { genreIdOrCategoryName, searchQuery } = useSelector((state) => state.currentGenreOrCategory);
+  const { genreIdOrCategoryName, searchQuery, page } = useSelector((state) => state.currentGenreOrCategory);
   const { data, error, isFetching } = useGetMoviesQuery({ genreIdOrCategoryName, page, searchQuery });
   const lg = useMediaQuery((theme) => theme.breakpoints.only('lg'));
 
@@ -39,9 +38,13 @@ function Movies() {
 
   return (
     <div>
-      <FeaturedMovie movie={data.results[0]} />
-      <MovieList movies={data} numberOfMovies={numberOfMovies} excludeFirst />
-      <Pagination currentPage={page} setPage={setPage} totalPages={data.total_pages} />
+      {!searchQuery && <FeaturedMovie movie={data.results[0]} />}
+      <MovieList
+        movies={data}
+        numberOfMovies={numberOfMovies}
+        excludeFirst={!searchQuery}
+      />
+      <Pagination currentPage={page} totalPages={data.total_pages} />
     </div>
   );
 }
