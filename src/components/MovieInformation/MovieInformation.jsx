@@ -160,8 +160,8 @@ function MovieInformation() {
                   <Button onClick={addToWatchlist} endIcon={isMovieWatchlisted ? <Remove /> : <PlusOne />}>Watchlist</Button>
                 </>
                 )}
-                <Button endIcon={<ArrowBack />} sx={{ borderColor: 'primary.main' }}>
-                  <Typography style={{ textDecoration: 'none' }} component={Link} to="/" color="inherit" variant="subtitle2">
+                <Button component={Link} to="/" endIcon={<ArrowBack />} sx={{ borderColor: 'primary.main' }}>
+                  <Typography style={{ textDecoration: 'none' }} color="inherit" variant="subtitle2">
                     Back
                   </Typography>
                 </Button>
