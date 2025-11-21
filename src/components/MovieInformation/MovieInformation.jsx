@@ -15,7 +15,7 @@ import useStyles from './styles';
 import genreIcons from '../../assets/genres';
 
 function MovieInformation() {
-  const { user } = useSelector(userSelector);
+  const { isAuthenticated, user } = useSelector(userSelector);
   const { id } = useParams();
   const classes = useStyles();
   const dispatch = useDispatch();
@@ -152,10 +152,14 @@ function MovieInformation() {
             </Grid>
             <Grid item xs={12} sm={6} className={classes.buttonsContainer}>
               <ButtonGroup size="medium" variant="outlined">
-                <Button onClick={addToFavorites} endIcon={isMovieFavorited ? <Favorite /> : <FavoriteBorderOutlined />}>
-                  {isMovieFavorited ? 'Unfavorite' : 'Favorite'}
-                </Button>
-                <Button onClick={addToWatchlist} endIcon={isMovieWatchlisted ? <Remove /> : <PlusOne />}>Watchlist</Button>
+                {isAuthenticated && (
+                <>
+                  <Button onClick={addToFavorites} endIcon={isMovieFavorited ? <Favorite /> : <FavoriteBorderOutlined />}>
+                    {isMovieFavorited ? 'Unfavorite' : 'Favorite'}
+                  </Button>
+                  <Button onClick={addToWatchlist} endIcon={isMovieWatchlisted ? <Remove /> : <PlusOne />}>Watchlist</Button>
+                </>
+                )}
                 <Button endIcon={<ArrowBack />} sx={{ borderColor: 'primary.main' }}>
                   <Typography style={{ textDecoration: 'none' }} component={Link} to="/" color="inherit" variant="subtitle2">
                     Back

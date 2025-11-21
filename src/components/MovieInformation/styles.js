@@ -1,5 +1,4 @@
 import { makeStyles } from '@mui/styles';
-import { display } from '@mui/system';
 
 export default makeStyles((theme) => ({
   containerSpaceAround: {
