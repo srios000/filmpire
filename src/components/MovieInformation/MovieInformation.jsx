@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, ButtonGroup, CircularProgress, Grid, Modal, Rating, Tooltip, Typography } from '@mui/material';
+import { Box, Button, ButtonGroup, CircularProgress, Grid, Modal, Rating, Snackbar, Alert, Tooltip, Typography } from '@mui/material';
 import { Movie as MovieIcon, Language, Theaters, FavoriteBorderOutlined, Favorite, Remove, PlusOne, ArrowBack, PlayArrow } from '@mui/icons-material';
 import { Link, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -21,14 +21,43 @@ function MovieInformation() {
   const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
   const [selectedVideoKey, setSelectedVideoKey] = useState('');
+  const [userRating, setUserRating] = useState(0);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
-  const { data, isFetching, error } = useGetMovieQuery(id);
+  const { data, isFetching, error: movieFetchError } = useGetMovieQuery(id);
   const { data: recommentations, isFetching: isRecommendationsFetching } = useGetRecommendationsQuery({ list: 'recommendations', movieId: id });
   const { data: favoriteMovies } = useGetListQuery({ listName: 'favorite/movies', accountId: user.id, sessionId: localStorage.getItem('session_id'), page: 1 });
   const { data: watchlistMovies } = useGetListQuery({ listName: 'watchlist/movies', accountId: user.id, sessionId: localStorage.getItem('session_id'), page: 1 });
 
   const [isMovieFavorited, setIsMovieFavorited] = useState(false);
   const [isMovieWatchlisted, setIsMovieWatchlisted] = useState(false);
+
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
+  useEffect(() => {
+    const fetchUserRating = async () => {
+      if (isAuthenticated) {
+        try {
+          const { data: accountStates } = await axios.get(
+            `https://api.themoviedb.org/3/movie/${id}/account_states?api_key=${import.meta.env.VITE_TMDB_KEY}&session_id=${localStorage.getItem('session_id')}`,
+          );
+          if (accountStates.rated) {
+            setUserRating(accountStates.rated.value);
+          }
+        } catch (error) {
+          showSnackbar('Failed to fetch user rating', 'error');
+        }
+      }
+    };
+
+    fetchUserRating();
+  }, [id, isAuthenticated]);
 
   useEffect(() => {
     setIsMovieFavorited(!!favoriteMovies?.results?.find((movie) => movie?.id === data?.id));
@@ -39,22 +68,58 @@ function MovieInformation() {
   }, [watchlistMovies, data]);
 
   const addToFavorites = async () => {
-    await axios.post(`https://api.themoviedb.org/3/account/${user.id}/favorite?api_key=${import.meta.env.VITE_TMDB_KEY}&session_id=${localStorage.getItem('session_id')}`, {
-      media_type: 'movie',
-      media_id: id,
-      favorite: !isMovieFavorited,
-    });
-
-    setIsMovieFavorited((prev) => !prev);
+    try {
+      await axios.post(`https://api.themoviedb.org/3/account/${user.id}/favorite?api_key=${import.meta.env.VITE_TMDB_KEY}&session_id=${localStorage.getItem('session_id')}`, {
+        media_type: 'movie',
+        media_id: id,
+        favorite: !isMovieFavorited,
+      });
+      setIsMovieFavorited((prev) => !prev);
+      showSnackbar(isMovieFavorited ? 'Removed from favorites' : 'Added to favorites');
+    } catch (error) {
+      showSnackbar('Failed to update favorites', 'error');
+    }
   };
-  const addToWatchlist = async () => {
-    await axios.post(`https://api.themoviedb.org/3/account/${user.id}/watchlist?api_key=${import.meta.env.VITE_TMDB_KEY}&session_id=${localStorage.getItem('session_id')}`, {
-      media_type: 'movie',
-      media_id: id,
-      watchlist: !isMovieWatchlisted,
-    });
 
-    setIsMovieWatchlisted((prev) => !prev);
+  const addToWatchlist = async () => {
+    try {
+      await axios.post(`https://api.themoviedb.org/3/account/${user.id}/watchlist?api_key=${import.meta.env.VITE_TMDB_KEY}&session_id=${localStorage.getItem('session_id')}`, {
+        media_type: 'movie',
+        media_id: id,
+        watchlist: !isMovieWatchlisted,
+      });
+      setIsMovieWatchlisted((prev) => !prev);
+      showSnackbar(isMovieWatchlisted ? 'Removed from watchlist' : 'Added to watchlist');
+    } catch (error) {
+      showSnackbar('Failed to update watchlist', 'error');
+    }
+  };
+
+  const addRating = async (value) => {
+    try {
+      await axios.post(
+        `https://api.themoviedb.org/3/movie/${id}/rating?api_key=${import.meta.env.VITE_TMDB_KEY}&session_id=${localStorage.getItem('session_id')}`,
+        {
+          value,
+        },
+      );
+      setUserRating(value);
+      showSnackbar('Rating added successfully');
+    } catch (error) {
+      showSnackbar('Failed to add rating', 'error');
+    }
+  };
+
+  const deleteRating = async () => {
+    try {
+      await axios.delete(
+        `https://api.themoviedb.org/3/movie/${id}/rating?api_key=${import.meta.env.VITE_TMDB_KEY}&session_id=${localStorage.getItem('session_id')}`,
+      );
+      setUserRating(0);
+      showSnackbar('Rating removed successfully');
+    } catch (error) {
+      showSnackbar('Failed to remove rating', 'error');
+    }
   };
 
   const handleVideoClick = (videoKey) => {
@@ -72,7 +137,7 @@ function MovieInformation() {
     );
   }
 
-  if (error) {
+  if (movieFetchError) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center">
         <Link to="/">Something has gone wrong.<br />Go back!</Link>
@@ -92,21 +157,64 @@ function MovieInformation() {
       <Grid item container direction="column" lg={7}>
         <Typography variant="h3" align="center" gutterBottom sx={{ marginTop: { sm: '1rem', md: '2rem' } }}>{data?.title} ({data.release_date.split('-')[0]})</Typography>
         <Typography variant="h5" align="center" gutterBottom>{data?.tagline}</Typography>
-        <Grid item className={classes.containerSpaceAround}>
-          <Box display="flex" align="center">
-            <Tooltip disableTouchListener title={`${data.vote_average} / 10`}>
-              <div>
-                <Rating readOnly value={data.vote_average / 2} precision={0.1} />
-              </div>
-            </Tooltip>
-            <Typography variant="subtitle1" gutterBottom style={{ marginLeft: '10px' }}>
-              {roundedUpVoteAverage} / 10
+
+        <Grid item className={classes.ratingContainer}>
+          <Box className={classes.tmdbRatingBox}>
+            <Typography variant="subtitle2" color="textSecondary" gutterBottom>
+              TMDB Rating
             </Typography>
+            <Box display="flex" alignItems="center" gap={1}>
+              <Tooltip disableTouchListener title={`${data.vote_average} / 10`}>
+                <div>
+                  <Rating readOnly value={data.vote_average / 2} precision={0.1} size="small" />
+                </div>
+              </Tooltip>
+              <Typography variant="body2" fontWeight="bold">
+                {roundedUpVoteAverage} / 10
+              </Typography>
+            </Box>
           </Box>
-          <Typography variant="h6" align="center" gutterBottom>
-            {data?.runtime}min | Language: {data?.spoken_languages[0].name}
-          </Typography>
+
+          {isAuthenticated && (
+            <Box className={classes.userRatingBox}>
+              <Typography variant="subtitle2" color="textSecondary" gutterBottom>
+                Your Rating
+              </Typography>
+              <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
+                <Rating
+                  value={userRating / 2}
+                  precision={0.5}
+                  size="small"
+                  onChange={(event, newValue) => {
+                    if (newValue) {
+                      addRating(newValue * 2);
+                    }
+                  }}
+                />
+                {userRating > 0 && (
+                  <>
+                    <Typography variant="body2" fontWeight="bold">
+                      {userRating.toFixed(1)} / 10
+                    </Typography>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={deleteRating}
+                      sx={{ fontSize: '0.7rem', padding: '2px 8px' }}
+                    >
+                      Remove
+                    </Button>
+                  </>
+                )}
+              </Box>
+            </Box>
+          )}
         </Grid>
+
+        <Typography variant="h6" align="center" gutterBottom style={{ marginTop: '16px' }}>
+          {data?.runtime}min | Language: {data?.spoken_languages[0].name}
+        </Typography>
+
         <Grid item className={classes.genresContainer}>
           {data?.genres?.map((genre) => (
             <Link
@@ -235,6 +343,17 @@ function MovieInformation() {
           />
         </Modal>
       )}
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Grid>
   );
 }
